@@ -22,7 +22,11 @@ const NewChatModal = ({ availableUsers, onStartNewChat, onClose }) => {
         maxHeight: '60vh',
         overflow: 'auto'
       }}>
-        <h3 style={{ color: "steelblue" }}>Start New Chat</h3>
+
+        <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ color: "steelblue" }}>Start New Chat</h3>
+          <Button onClick={onClose}>Cancel</Button>
+        </div>
 
         <div style={{ marginTop: '15px' }}>
           {availableUsers.map(user => (
@@ -40,7 +44,7 @@ const NewChatModal = ({ availableUsers, onStartNewChat, onClose }) => {
               onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f0f0'}
               onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <Avatar src={user.avatar} size="sm" />
+              <Avatar src="../imgs/profile.png" size="sm" />
               <div style={{ marginLeft: '10px' }}>
                 <div style={{ fontWeight: 'bold' }}>{user.name}</div>
                 <div style={{ fontSize: '12px', color: user.status === 'online' ? 'green' : 'gray' }}>
@@ -51,9 +55,6 @@ const NewChatModal = ({ availableUsers, onStartNewChat, onClose }) => {
           ))}
         </div>
 
-        <Button onClick={onClose} style={{ marginTop: '15px' }}>
-          Cancel
-        </Button>
       </div>
     </div>
   );

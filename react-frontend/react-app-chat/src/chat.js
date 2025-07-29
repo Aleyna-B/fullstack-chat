@@ -12,6 +12,8 @@ import { downloadFile, downloadImage } from './modules/downloadFuncs';
 import AttachModal from './modules/AttachModal';
 import ImageModal from './modules/ImageModal';
 import NewChatModal from './modules/NewChatModal';
+import MassMessageModal from './modules/MassMessageModal';
+import MassComposeModal from './modules/MassComposeModal';
 
 
 const Chat = () => {
@@ -161,57 +163,120 @@ const Chat = () => {
     const [searchValue, setSearchValue] = useState("");
     const [showNewChatModal, setShowNewChatModal] = useState(false);
 
-    const [availableUsers, setAvailableUsers] = useState([
-        { id: 1, name: "Alice", avatar: "/imgs/profile.png", status: "online" },
-        { id: 2, name: "Bob", avatar: "/imgs/profile.png", status: "offline" }
-    ]); // This would come from the backend
+    const [allContacts, setAllContacts] = useState([
+        { id: 1, name: "Joe", status: "offline" },
+        { id: 2, name: "Jane", status: "online" },
+        { id: 3, name: "Alice", status: "online" },
+        { id: 4, name: "Bob", status: "offline" },
+        { id: 5, name: "Charlie", status: "online" },
+        { id: 6, name: "Diana", status: "offline" }
+    ]);
+
+    const [conversations, setConversations] = useState([
+        {
+            id: 1,
+            partnerId: 1,
+            name: "Joe",
+            lastMessage: "Hello friend",
+            lastSenderName: "Joe",
+            status: "offline",
+            active: false,
+            timestamp: "10:30 AM"
+        },
+        {
+            id: 2,
+            partnerId: 2,
+            name: "Jane",
+            lastMessage: "How are you?",
+            lastSenderName: "Jane",
+            status: "online",
+            active: true,
+            timestamp: "11:45 AM"
+        }
+    ]);
+
+    const availableUsers = allContacts.filter(contact =>
+        !conversations.some(conv => conv.partnerId === contact.id)
+    );
+
+    const [activeConversationId, setActiveConversationId] = useState(2); // Default to Jane's conversation ID
+    const activeConversation = conversations.find(conv => conv.id === activeConversationId);
 
     function startNewChat(user) {
-        const existingConv = conversations.find(conv => conv.name === user.name);
+        // Create new conversation object
+        const newConversation = {
+            id: Date.now(), // Backend would return real conversation ID
+            partnerId: user.id,
+            name: user.name,
+            lastSenderName: "",
+            info: "New conversation",
+            active: true
+        };
 
-        if (existingConv) {
-            // If exists, just activate it
-            setActiveConversationId(existingConv.id);
-            setConversations(prev => prev.map(conv => ({
-                ...conv,
-                active: conv.id === existingConv.id
-            })));
-        } else {
-            // Create new conversation and add to top
-            const newConversation = {
-                id: Date.now(), // Simple ID generation
-                name: user.name,
-                info: user.info,
-                status: user.status,
-                avatar: user.avatar,
-                lastSenderName: user.name,
-                active: true
-            };
+        // Add to conversations list and deactivate others
+        setConversations(prev => [
+            newConversation,
+            ...prev.map(conv => ({ ...conv, active: false }))
+        ]);
 
-            // Add to top and deactivate others
-            setConversations(prev => [
-                newConversation,
-                ...prev.map(conv => ({ ...conv, active: false }))
-            ]);
+        setActiveConversationId(newConversation.id);
 
-            setActiveConversationId(newConversation.id);
-            setAvailableUsers(prev => prev.filter(availableUser => availableUser.id !== user.id));
-        }
-
-        // Clear messages for new/activated chat
+        // Clear messages for new chat
         setMessages([]);
         setShowNewChatModal(false);
 
-        console.log("Started chat with:", user.name);
+        // Send to backend to create conversation record
+        createConversationInDB(user.id);
+
+        console.log("Started conversation with:", user.name);
     }
 
-    const [conversations, setConversations] = useState([
-        { id: 1, name: "Joe", lastSenderName: "Joe", status: "offline", avatar: "/imgs/profile.png", active: false },
-        { id: 2, name: "Jane", lastSenderName: "Jane", status: "online", avatar: "/imgs/profile.png", active: true }
-    ]);
+    async function createConversationInDB(partnerId) {
+        //     try {
+        //         await fetch('/api/conversations', {
+        //             method: 'POST',
+        //             headers: { 'Content-Type': 'application/json' },
+        //             body: JSON.stringify({ partnerId })
+        //         });
+        //     } catch (error) {
+        //         console.error('Failed to create conversation:', error);
+        //     }
+    }
 
-    const [activeConversationId, setActiveConversationId] = useState(conversations.size);
-    const activeConversation = conversations.find(conv => conv.id === activeConversationId);
+    const [showMassMessageModal, setShowMassMessageModal] = useState(false);
+    const [showMassComposeModal, setShowMassComposeModal] = useState(false);
+    const [selectedMassRecipients, setSelectedMassRecipients] = useState([]);
+    const [massMessage, setMassMessage] = useState("");
+
+    function handleSendMassMessage(selectedUsers) {
+        console.log("Mass message recipients:", selectedUsers);
+        setSelectedMassRecipients(selectedUsers);
+        setShowMassMessageModal(false);   
+        setShowMassComposeModal(true);    
+    }
+
+    function sendMassMessage() {
+        const trimmed = massMessage.trim();
+        if (!trimmed) return;
+
+        const userIds = selectedMassRecipients.map(u => u.id);
+
+        console.log("Sending mass message:", trimmed, "to:", userIds);
+
+        // Example: send over WebSocket
+        // socket.send(JSON.stringify({
+        //     type: "mass_message",
+        //     to: userIds,
+        //     message: trimmed
+        // }));
+
+        // Reset everything
+        setMassMessage("");
+        setSelectedMassRecipients([]);
+        setShowMassComposeModal(false);
+        //MODIFY: Add the mass message to the messages list
+    }
+
 
     return (
         <div className="chatPage-div" >
@@ -220,15 +285,13 @@ const Chat = () => {
 
                 <Sidebar position='left'>
                     <div style={{
-                        display: 'flex',
-                        gap: '10px',
-                        margin: '20px'
+                        marginTop: '15px', marginRight: '15px', marginLeft: '15px'
                     }}>
-                        <AddUserButton border style={{ flex: 1 }} onClick={() => setShowNewChatModal(true)}>
+                        <AddUserButton border onClick={() => setShowNewChatModal(true)}>
                             Yeni Sohbet
                         </AddUserButton>
 
-                        <AddUserButton border style={{ flex: 1 }} /*onClick={() =>} tüm kullanıcıları getirip gösterecek bir fonksiyon */>
+                        <AddUserButton border onClick={() => setShowMassMessageModal(true)}>
                             Toplu Mesaj
                         </AddUserButton>
                     </div>
@@ -256,7 +319,7 @@ const Chat = () => {
                                     setMessages([]); // Or load from storage/API
                                 }}
                             >
-                                <Avatar src={conv.avatar} />
+                                <Avatar src="/imgs/profile.png" />
                             </Conversation>
                         ))}
                     </ConversationList>
@@ -364,6 +427,24 @@ const Chat = () => {
                         availableUsers={availableUsers}
                         onStartNewChat={startNewChat}
                         onClose={() => setShowNewChatModal(false)}
+                    />
+                )}
+
+                {showMassMessageModal && (
+                    <MassMessageModal
+                        availableUsers={allContacts}
+                        onSendMassMessage={handleSendMassMessage}
+                        onClose={() => setShowMassMessageModal(false)}
+                    />
+                )}
+
+                {showMassComposeModal && (
+                    <MassComposeModal
+                        recipients={selectedMassRecipients}
+                        message={massMessage}
+                        onMessageChange={setMassMessage}
+                        onSend={sendMassMessage}
+                        onClose={() => setShowMassComposeModal(false)}
                     />
                 )}
 
