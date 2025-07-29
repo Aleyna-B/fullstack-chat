@@ -8,6 +8,10 @@ import {
 } from '@chatscope/chat-ui-kit-react';
 import React, { useState, useEffect } from 'react';
 import { type } from '@testing-library/user-event/dist/type';
+import { downloadFile, downloadImage } from './modules/downloadFuncs';
+import AttachModal from './modules/AttachModal';
+import ImageModal from './modules/ImageModal';
+import NewChatModal from './modules/NewChatModal';
 
 
 const Chat = () => {
@@ -30,36 +34,6 @@ const Chat = () => {
         payload: ""
 
     };
-
-    function sendMessage(messageText) {
-        messageObj.payload = messageText;
-        console.log("Message sent: ", messageObj.payload);
-        console.log("Message sent time: ", messageObj.sentTime);
-        setMessages(prevMessages => [...prevMessages, messageObj]);
-
-        //then send the message to a server
-    }
-
-    // useEffect(() => {       //possible real implementation of receiving messages from a server
-    //     const socket = new WebSocket('ws://localhost:8080/chat');
-
-    //     socket.onmessage = (event) => {
-    //         const data = JSON.parse(event.data);
-
-    //         const incomingMessage = {
-    //             payload: data.payload,
-    //             sentTime: data.timestamp,
-    //             sender: data.sender,
-    //             direction: "incoming",
-    //             position: "single",
-    //             type: data.type
-    //         };
-
-    //         setMessages(prevMessages => [...prevMessages, incomingMessage]);
-    //     };
-
-    //     return () => socket.close();
-    // }, []);
 
     const [showAttachModal, setShowAttachModal] = useState(false);
 
@@ -146,6 +120,36 @@ const Chat = () => {
         setShowAttachModal(false);
     }
 
+    function sendMessage(messageText) {
+        messageObj.payload = messageText;
+        console.log("Message sent: ", messageObj.payload);
+        console.log("Message sent time: ", messageObj.sentTime);
+        setMessages(prevMessages => [...prevMessages, messageObj]);
+
+        //then send the message to a server
+    }
+
+    // useEffect(() => {       //possible real implementation of receiving messages from a server
+    //     const socket = new WebSocket('ws://localhost:8080/chat');
+
+    //     socket.onmessage = (event) => {
+    //         const data = JSON.parse(event.data);
+
+    //         const incomingMessage = {
+    //             payload: data.payload,
+    //             sentTime: data.timestamp,
+    //             sender: data.sender,
+    //             direction: "incoming",
+    //             position: "single",
+    //             type: data.type
+    //         };
+
+    //         setMessages(prevMessages => [...prevMessages, incomingMessage]);
+    //     };
+
+    //     return () => socket.close();
+    // }, []);
+
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
 
@@ -154,37 +158,7 @@ const Chat = () => {
         setShowImageModal(true);
     }
 
-    function downloadFile(file) {
-        // Create a temporary URL for the file
-        const url = URL.createObjectURL(file);
-
-        // Create a temporary anchor element
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name; // Sets the download filename
-
-        // Trigger the download
-        document.body.appendChild(a);
-        a.click();
-
-        // Clean up
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    function downloadImage(imagePayload) {
-        const url = URL.createObjectURL(imagePayload.img);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = imagePayload.imgName; // Note: imgName not fileName
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
     const [searchValue, setSearchValue] = useState("");
-
     const [showNewChatModal, setShowNewChatModal] = useState(false);
 
     const [availableUsers, setAvailableUsers] = useState([
@@ -370,134 +344,27 @@ const Chat = () => {
                 </ChatContainer>
 
                 {showAttachModal && (       //popup for choosing attachment type
-                    <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1000
-                    }}>
-                        <div style={{
-                            backgroundColor: 'white',
-                            padding: '30px',
-                            borderRadius: '10px',
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-                            minWidth: '300px',
-                            textAlign: 'center'
-                        }}>
-                            <h3 style={{ color: "steelblue" }} >Choose Attachment Type </h3>
-                            <div style={{ display: 'center', gap: '15px', marginTop: '30px' }}>
-                                <ArrowButton border direction="up" style={{ color: "deepskyblue", marginRight: '10px', borderColor: "deepskyblue" }}
-                                    onClick={handleFileUpload}>Upload File</ArrowButton>
-
-                                <ArrowButton border direction="up" style={{ color: "deepskyblue", borderColor: "deepskyblue" }}
-                                    onClick={handleImageUpload}>Send Image</ArrowButton>
-                            </div>
-                            <Button onClick={() => setShowAttachModal(false)} style={{ marginTop: '15px' }}>Cancel</Button>
-                        </div>
-                    </div>
+                    <AttachModal        //my modal component
+                        onFileUpload={handleFileUpload}
+                        onImageUpload={handleImageUpload}
+                        onClose={() => setShowAttachModal(false)}
+                    />
                 )}
 
                 {showImageModal && selectedImage && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1001
-                    }}>
-                        <div style={{
-                            backgroundColor: 'white',
-                            padding: '20px',
-                            borderRadius: '10px',
-                            maxWidth: '90%',
-                            maxHeight: '90%',
-                            textAlign: 'center'
-                        }}>
-                            <div style={{ marginBottom: '15px', display: 'flex', gap: '15px', justifyContent: 'right' }}>
-                                <ArrowButton border direction="down" style={{ color: "deepskyblue", marginRight: '10px', borderColor: "deepskyblue" }}
-                                    onClick={() => downloadImage(selectedImage)}>Download</ArrowButton>
-
-                                <Button border onClick={() => setShowImageModal(false)}>Close</Button>
-                            </div>
-
-                            <img
-                                src={URL.createObjectURL(selectedImage.img)}
-                                alt={selectedImage.imgName}
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '70vh',
-                                    objectFit: 'contain'
-                                }}
-                            />
-
-                        </div>
-                    </div>
+                    <ImageModal
+                        selectedImage={selectedImage}
+                        onDownload={downloadImage}
+                        onClose={() => setShowImageModal(false)}
+                    />
                 )}
 
                 {showNewChatModal && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1002
-                    }}>
-                        <div style={{
-                            backgroundColor: 'white',
-                            padding: '20px',
-                            borderRadius: '10px',
-                            width: '400px',
-                            maxHeight: '60vh',
-                            overflow: 'auto'
-                        }}>
-                            <h3 style={{ color: "steelblue" }}>Start New Chat</h3>
-                            <div style={{ marginTop: '15px' }}>
-                                {availableUsers.map(user => (
-                                    <div
-                                        key={user.id}
-                                        onClick={() => startNewChat(user)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            padding: '10px',
-                                            cursor: 'pointer',
-                                            borderRadius: '5px',
-                                            marginBottom: '5px'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                                    >
-                                        <Avatar src={user.avatar} size="sm" />
-                                        <div style={{ marginLeft: '10px' }}>
-                                            <div style={{ fontWeight: 'bold' }}>{user.name}</div>
-                                            <div style={{ fontSize: '12px', color: user.status === 'online' ? 'green' : 'gray' }}>
-                                                {user.status}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button onClick={() => setShowNewChatModal(false)} style={{ marginTop: '15px' }}>
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
+                    <NewChatModal
+                        availableUsers={availableUsers}
+                        onStartNewChat={startNewChat}
+                        onClose={() => setShowNewChatModal(false)}
+                    />
                 )}
 
 
