@@ -274,7 +274,7 @@ const Chat = () => {
         setMassMessage("");
         setSelectedMassRecipients([]);
         setShowMassComposeModal(false);
-        //MODIFY: Add the mass message to the messages list
+        //make sure the message is saved in the database
     }
 
 
