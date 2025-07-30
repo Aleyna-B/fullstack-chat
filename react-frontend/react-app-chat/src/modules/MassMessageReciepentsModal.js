@@ -41,8 +41,8 @@ const MassMessageModal = ({ availableUsers, onSendMassMessage, onClose }) => {
             }}>
 
                 <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'space-between' }}>
-                    <h3 style={{ color: "steelblue" }}>Send Mass Message</h3>
-                    <Button onClick={onClose}>Cancel</Button>
+                    <h3 style={{ color: "steelblue" }}>Kullanıcı Seçin</h3>
+                    <Button onClick={onClose}>İptal</Button>
                 </div>
 
 
