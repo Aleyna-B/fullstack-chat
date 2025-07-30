@@ -2,7 +2,7 @@ import './css/chat.css';
 import styles from '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import {
     MainContainer, Sidebar, ConversationList, Conversation,
-    ChatContainer, MessageList, Message,
+    ChatContainer, MessageList, Message,AttachmentButton,
     ConversationHeader, VoiceCallButton, VideoCallButton,
     MessageInput, Avatar, AddUserButton, InfoButton, Button, ArrowButton, Search
 } from '@chatscope/chat-ui-kit-react';
@@ -12,8 +12,7 @@ import { downloadFile, downloadImage } from './modules/downloadFuncs';
 import AttachModal from './modules/AttachModal';
 import ImageModal from './modules/ImageModal';
 import NewChatModal from './modules/NewChatModal';
-import MassMessageModal from './modules/MassMessageModal';
-import MassComposeModal from './modules/MassComposeModal';
+import MassMessageModal from './modules/MassMessageReciepentsModal';
 
 
 const Chat = () => {
@@ -122,7 +121,7 @@ const Chat = () => {
         setShowAttachModal(false);
     }
 
-    function sendMessage(messageText) {
+    function sendMessage(messageText) { //!handle empty messages later!
         messageObj.payload = messageText;
         console.log("Message sent: ", messageObj.payload);
         console.log("Message sent time: ", messageObj.sentTime);
@@ -246,22 +245,23 @@ const Chat = () => {
     const [showMassMessageModal, setShowMassMessageModal] = useState(false);
     const [showMassComposeModal, setShowMassComposeModal] = useState(false);
     const [selectedMassRecipients, setSelectedMassRecipients] = useState([]);
-    const [massMessage, setMassMessage] = useState("");
+    const [massMessages, setMassMessages] = useState([]);
 
     function handleSendMassMessage(selectedUsers) {
         console.log("Mass message recipients:", selectedUsers);
         setSelectedMassRecipients(selectedUsers);
-        setShowMassMessageModal(false);   
-        setShowMassComposeModal(true);    
+        setShowMassMessageModal(false);
+        setShowMassComposeModal(true);
     }
 
-    function sendMassMessage() {
-        const trimmed = massMessage.trim();
-        if (!trimmed) return;
+    function sendMassMessage(messageText) {        
+        messageObj.payload = messageText;
+        console.log("Mass message sent: ", messageObj.payload);
+        setMassMessages(prevMessages => [...prevMessages, messageObj]);
 
         const userIds = selectedMassRecipients.map(u => u.id);
 
-        console.log("Sending mass message:", trimmed, "to:", userIds);
+        console.log("Sending mass message:", messageText, "to:", userIds);
 
         // Example: send over WebSocket
         // socket.send(JSON.stringify({
@@ -270,17 +270,19 @@ const Chat = () => {
         //     message: trimmed
         // }));
 
-        // Reset everything
-        setMassMessage("");
-        setSelectedMassRecipients([]);
-        setShowMassComposeModal(false);
         //make sure the message is saved in the database
+    }
+
+    function handleMassMessageCancel() {
+        setShowMassComposeModal(false);
+        setSelectedMassRecipients([]);
+        setMassMessages([]);
     }
 
 
     return (
         <div className="chatPage-div" >
-            <title>Chat Application</title>
+            <title>Chat</title>
             <MainContainer>
 
                 <Sidebar position='left'>
@@ -439,13 +441,61 @@ const Chat = () => {
                 )}
 
                 {showMassComposeModal && (
-                    <MassComposeModal
-                        recipients={selectedMassRecipients}
-                        message={massMessage}
-                        onMessageChange={setMassMessage}
-                        onSend={sendMassMessage}
-                        onClose={() => setShowMassComposeModal(false)}
-                    />
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1003
+                    }}>
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '10px',
+                            width: '500px',
+                            maxHeight: '70vh'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                gap: '10px',
+                                justifyContent: 'flex-end'
+                            }}>
+                                <Button onClick={() => handleMassMessageCancel()}>Çık</Button>
+                            </div>
+
+                            <ChatContainer>
+                                <ConversationHeader>
+                                    <ConversationHeader.Content
+                                        userName="Toplu Mesaj"
+                                        info={selectedMassRecipients.map(user => user.name).join(', ')}
+                                    />
+                                </ConversationHeader>
+                                <MessageList>
+                                    {massMessages.map((massmsg, index) => {
+
+                                        return (
+                                            <Message
+                                                key={index}
+                                                model={massmsg}
+                                                avatarSpacer
+                                            />
+                                        );
+
+                                    })}
+                                </MessageList>
+                                <MessageInput autoFocus
+                                    placeholder="Type message here"
+                                    onSend={sendMassMessage}
+                                    //onAttachClick={handleAttachClick} disabled for now
+                                />
+                            </ChatContainer>
+                        </div>
+                    </div>
                 )}
 
 

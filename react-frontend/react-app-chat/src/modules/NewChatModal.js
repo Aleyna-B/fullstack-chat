@@ -24,8 +24,8 @@ const NewChatModal = ({ availableUsers, onStartNewChat, onClose }) => {
       }}>
 
         <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'space-between' }}>
-          <h3 style={{ color: "steelblue" }}>Start New Chat</h3>
-          <Button onClick={onClose}>Cancel</Button>
+          <h3 style={{ color: "steelblue" }}>Yeni Sohbet</h3>
+          <Button onClick={onClose}>Çık</Button>
         </div>
 
         <div style={{ marginTop: '15px' }}>
