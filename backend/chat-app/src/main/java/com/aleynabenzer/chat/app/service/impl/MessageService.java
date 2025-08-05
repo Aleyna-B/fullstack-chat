@@ -2,7 +2,6 @@ package com.aleynabenzer.chat.app.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -14,21 +13,21 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class MessageService{
-	private final MessageRepository messageRepo;
-	private final ChatRoomService chatRoomService;
+	private final MessageRepository repository;
+    private final ChatRoomService chatRoomService;
 
-	public List<MessageEntity> getMessages(Integer senderId,Integer recipientId) {
-		var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
-        return chatId.map(messageRepo::findByChatId).orElse(new ArrayList<>());
-	}
+    public MessageEntity addMessage(MessageEntity chatMessage) {
+        var chatId = chatRoomService
+                .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), true)
+                .orElseThrow(); // You can create your own dedicated exception
+        chatMessage.setChatId(chatId);
+        repository.save(chatMessage);
+        return chatMessage;
+    }
 
-
-	public MessageEntity addMessage(MessageEntity msg) {
-        String chatId = chatRoomService
-                .getChatRoomId(msg.getSenderId(), msg.getRecipientId(), true);
-        msg.setChatId(chatId);
-        messageRepo.save(msg);
-		return msg;
-	}
+    public List<MessageEntity> findChatMessages(Integer senderId, Integer recipientId) {
+        var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
+        return chatId.map(repository::findByChatId).orElse(new ArrayList<>());
+    }
 
 }

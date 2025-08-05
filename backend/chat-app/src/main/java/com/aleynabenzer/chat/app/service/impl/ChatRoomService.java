@@ -13,10 +13,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatRoomService{
 
-	private final ChatRoomRepository roomRepo;
+	private final ChatRoomRepository chatRoomRepository;
 
-	public String addChatRoom(Integer senderId,Integer recipientId) {
-		var chatId = String.format("%s_%s", senderId, recipientId);
+    public Optional<String> getChatRoomId(Integer senderId,Integer recipientId,
+            boolean createNewRoomIfNotExists
+    ) {
+        return chatRoomRepository
+                .findBySenderIdAndRecipientId(senderId, recipientId)
+                .map(ChatRoomEntity::getChatId)
+                .or(() -> {
+                    if(createNewRoomIfNotExists) {
+                        var chatId = createChatId(senderId, recipientId);
+                        return Optional.of(chatId);
+                    }
+
+                    return  Optional.empty();
+                });
+    }
+
+    private String createChatId(Integer senderId, Integer recipientId) {
+        var chatId = String.format("%s_%s", senderId, recipientId);
 
         ChatRoomEntity senderRecipient = ChatRoomEntity
                 .builder()
@@ -32,26 +48,9 @@ public class ChatRoomService{
                 .recipientId(senderId)
                 .build();
 
-        roomRepo.save(senderRecipient);
-        roomRepo.save(recipientSender);
+        chatRoomRepository.save(senderRecipient);
+        chatRoomRepository.save(recipientSender);
 
-        return chatId;		
-	}
-
-    public String getChatRoomId(Integer senderId,Integer recipientId,
-            boolean createNewRoomIfNotExists
-    ) {
-        return roomRepo
-                .findBySenderIdAndRecipientId(senderId, recipientId)
-                .map(ChatRoomEntity::getChatId)
-                .or(() -> {
-                    if(createNewRoomIfNotExists) {
-                        var chatId = addChatRoom(senderId, recipientId);
-                        return Optional.of(chatId);
-                    }
-
-                    return  Optional.empty();
-                });
+        return chatId;
     }
-
 }

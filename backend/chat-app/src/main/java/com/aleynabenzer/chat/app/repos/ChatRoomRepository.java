@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.aleynabenzer.chat.app.model.ChatRoomEntity;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoomEntity,Integer>{
-	ChatRoomEntity findBySenderIdAndRecipientId(Integer senderId, Integer recipientId);
+	 Optional<ChatRoomEntity> findBySenderIdAndRecipientId(Integer senderId, Integer recipientId);
 }
