@@ -22,7 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	    public void configureMessageBroker(MessageBrokerRegistry registry) {
 	        registry.enableSimpleBroker("/user");
 	        registry.setApplicationDestinationPrefixes("/app");
-	        //Tells Spring that messages sent from clients with this destination go to @MessageMapping com.aleynabenzer.chat.app.controller methods.
+	        //Tells Spring that messages sent from clients with this destination go to @MessageMapping controller methods.
 	        registry.setUserDestinationPrefix("/user");//Special prefix for private messaging.
 	    }
 
