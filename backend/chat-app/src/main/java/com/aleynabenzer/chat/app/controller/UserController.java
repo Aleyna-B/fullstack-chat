@@ -47,7 +47,7 @@ public class UserController {
         return user;
     }
     
-    @GetMapping("/{id}")
+    @GetMapping("/user/{id}")
     public void deleteUser(@PathVariable("id") Integer id) {
     	/////DISCONNECT	/////
     	userWritableService.remove(id);
