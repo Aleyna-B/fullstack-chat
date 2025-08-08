@@ -1,10 +1,13 @@
 package com.aleynabenzer.chat.app.service.impl;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.aleynabenzer.chat.app.model.ChatRoomEntity;
+import com.aleynabenzer.chat.app.model.UserEntity;
 import com.aleynabenzer.chat.app.repos.ChatRoomRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class ChatRoomService{
 
 	private final ChatRoomRepository chatRoomRepository;
+	private final UserService userServ;
 
     public Optional<String> getChatRoomId(Integer senderId,Integer recipientId,
             boolean createNewRoomIfNotExists
@@ -52,5 +56,16 @@ public class ChatRoomService{
         chatRoomRepository.save(recipientSender);
 
         return chatId;
+    }
+    
+    public List<UserEntity> findPreviousChats(Integer senderId){
+    	List<Integer> recipientIds = chatRoomRepository.findBySenderId(senderId).stream()
+                .map(ChatRoomEntity::getRecipientId)
+                .collect(Collectors.toList());
+
+        return recipientIds.stream()
+                .map(userServ::getById)
+                .collect(Collectors.toList());
+    	
     }
 }

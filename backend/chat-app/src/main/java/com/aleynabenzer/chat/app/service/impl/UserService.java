@@ -34,7 +34,7 @@ public class UserService implements UserDetailsService,UserReadable,UserWritable
 
 	@Override
 	public UserEntity getById(Integer id) {
-		return userRepo.findById(id).orElseThrow(()-> new IllegalArgumentException());
+		return userRepo.findByIdAndDeletedFalse(id).orElseThrow(()-> new IllegalArgumentException());
 	}
 	
 	public UserEntity getByEmail(String email) {
