@@ -5,9 +5,9 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import com.aleynabenzer.chat.app.dto.UserDto;
 import com.aleynabenzer.chat.app.model.UserEntity;
@@ -21,16 +21,16 @@ public class ChatRoomController {
 	private final ChatRoomService chatRoomService;
 	private final ModelMapper modelMapper;
 	
-	@GetMapping("messages/{senderId}")
-	public ResponseEntity<List<UserDto>> getConvos(@PathVariable("senderId") Integer senderId){
-	    List<UserEntity> users = chatRoomService.findPreviousChats(senderId);
+	@GetMapping("/messages")
+	public ResponseEntity<List<UserDto>> getConvos(@AuthenticationPrincipal UserEntity loggedInUser) {
+	    List<UserEntity> users = chatRoomService.findPreviousChats(loggedInUser.getId());
 	    
 	    List<UserDto> userDtos = users.stream()
 	        .map(user -> modelMapper.map(user, UserDto.class))
 	        .collect(Collectors.toList());
 
 	    return ResponseEntity.ok(userDtos);
-		
 	}
+
 
 }

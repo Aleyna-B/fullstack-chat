@@ -1,0 +1,4 @@
+2025-08-11T16:48:41.273+03:00  INFO 14808 --- [chat-app] [RMI TCP Connection(85)-127.0.0.1] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2025-08-11T16:48:41.311+03:00  INFO 14808 --- [chat-app] [RMI TCP Connection(85)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-08-11T16:48:41.319+03:00  INFO 14808 --- [chat-app] [RMI TCP Connection(85)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-08-11T16:48:41.341+03:00  INFO 14808 --- [chat-app] [RMI TCP Connection(85)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

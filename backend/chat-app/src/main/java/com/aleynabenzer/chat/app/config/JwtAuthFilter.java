@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.aleynabenzer.chat.app.service.IJwtUtils;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,13 +40,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		final String jwtToken;
 		final String userEmail;
 		
-		if(authHeader == null || authHeader.isBlank()) {// Authorization boş gelmişse security filter chain yoluna devam etsin
+		if(authHeader == null || authHeader.isBlank()
+				|| !authHeader.startsWith("Bearer ")) {// Authorization boş gelmişse security filter chain yoluna devam etsin
 			filterChain.doFilter(request, response);
 			return;
 		}
 		
 		jwtToken = authHeader.substring(7); // Bearer ldjrieri
-		userEmail = jwtUtilsService.extractUsername(jwtToken); // request ile gelen token içinden eposta çıkarıldı
+
+	    try {
+	        userEmail = jwtUtilsService.extractUsername(jwtToken); // request ile gelen token içinden eposta çıkarıldı
+	    } catch (ExpiredJwtException ex) {
+	        logger.warn("Expired JWT: " + ex.getMessage());
+	        // continue filter chain without setting authentication
+	        filterChain.doFilter(request, response);
+	        return;
+	    }
 		
 		if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = userService.loadUserByUsername(userEmail);

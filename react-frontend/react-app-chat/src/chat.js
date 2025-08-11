@@ -2,7 +2,7 @@ import './css/chat.css';
 import styles from '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import {
     MainContainer, Sidebar, ConversationList, Conversation,
-    ChatContainer, MessageList, Message,AttachmentButton,
+    ChatContainer, MessageList, Message, AttachmentButton,
     ConversationHeader, VoiceCallButton, VideoCallButton,
     MessageInput, Avatar, AddUserButton, InfoButton, Button, ArrowButton, Search
 } from '@chatscope/chat-ui-kit-react';
@@ -13,6 +13,7 @@ import AttachModal from './modules/AttachModal';
 import ImageModal from './modules/ImageModal';
 import NewChatModal from './modules/NewChatModal';
 import MassMessageModal from './modules/MassMessageReciepentsModal';
+import axiosInstance from './config/axiosConfig';
 
 
 const Chat = () => {
@@ -159,56 +160,46 @@ const Chat = () => {
         setShowImageModal(true);
     }
 
-    const [searchValue, setSearchValue] = useState("");
-    const [showNewChatModal, setShowNewChatModal] = useState(false);
+    const [searchValue, setSearchValue] = useState(""); // For search functionality in conversation list
 
-    const [allContacts, setAllContacts] = useState([
-        { id: 1, name: "Joe", status: "offline" },
-        { id: 2, name: "Jane", status: "online" },
-        { id: 3, name: "Alice", status: "online" },
-        { id: 4, name: "Bob", status: "offline" },
-        { id: 5, name: "Charlie", status: "online" },
-        { id: 6, name: "Diana", status: "offline" }
-    ]);
+    const [allContacts, setAllContacts] = useState([]);
+    useEffect(() => {
+        axiosInstance.get('/users')
+            .then(response => {
+                setAllContacts(response.data);
+                console.log('/users response:', response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching:', error);
+            });
+    }, []);
 
-    const [conversations, setConversations] = useState([
-        {
-            id: 1,
-            partnerId: 1,
-            name: "Joe",
-            lastMessage: "Hello friend",
-            lastSenderName: "Joe",
-            status: "offline",
-            active: false,
-            timestamp: "10:30 AM"
-        },
-        {
-            id: 2,
-            partnerId: 2,
-            name: "Jane",
-            lastMessage: "How are you?",
-            lastSenderName: "Jane",
-            status: "online",
-            active: true,
-            timestamp: "11:45 AM"
-        }
-    ]);
+    const [conversations, setConversations] = useState([]);
+    useEffect(() => {
+        axiosInstance.get('/messages')
+            .then(response => {
+                setConversations(response.data);
+                console.log('/messages response:', response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching:', error);
+            });
+    }, []);
 
     const availableUsers = allContacts.filter(contact =>
-        !conversations.some(conv => conv.partnerId === contact.id)
+        !conversations.some(conv => conv.id === contact.id)
     );
 
     const [activeConversationId, setActiveConversationId] = useState(2); // Default to Jane's conversation ID
     const activeConversation = conversations.find(conv => conv.id === activeConversationId);
 
+    const [showNewChatModal, setShowNewChatModal] = useState(false);
     function startNewChat(user) {
         // Create new conversation object
         const newConversation = {
             id: Date.now(), // Backend would return real conversation ID
             partnerId: user.id,
             name: user.name,
-            lastSenderName: "",
-            info: "New conversation",
             active: true
         };
 
@@ -219,11 +210,9 @@ const Chat = () => {
         ]);
 
         setActiveConversationId(newConversation.id);
-
         // Clear messages for new chat
         setMessages([]);
         setShowNewChatModal(false);
-
         // Send to backend to create conversation record
         createConversationInDB(user.id);
 
@@ -254,7 +243,7 @@ const Chat = () => {
         setShowMassComposeModal(true);
     }
 
-    function sendMassMessage(messageText) {        
+    function sendMassMessage(messageText) {
         messageObj.payload = messageText;
         console.log("Mass message sent: ", messageObj.payload);
         setMassMessages(prevMessages => [...prevMessages, messageObj]);
@@ -308,9 +297,8 @@ const Chat = () => {
                             <Conversation
                                 key={conv.id}
                                 name={conv.name}
-                                lastSenderName={conv.lastSenderName}
-                                info={conv.info}
                                 active={conv.active}
+                                status={conv.status}
                                 onClick={() => {
                                     setActiveConversationId(conv.id);
                                     setConversations(prev => prev.map(c => ({
@@ -491,7 +479,7 @@ const Chat = () => {
                                 <MessageInput autoFocus
                                     placeholder="Type message here"
                                     onSend={sendMassMessage}
-                                    //onAttachClick={handleAttachClick} disabled for now
+                                //onAttachClick={handleAttachClick} disabled for now
                                 />
                             </ChatContainer>
                         </div>

@@ -67,7 +67,7 @@ const MassMessageModal = ({ availableUsers, onSendMassMessage, onClose }) => {
                                 <Avatar src="../imgs/profile.png" size="sm" />
                                 <div style={{ marginLeft: '10px' }}>
                                     <div style={{ fontWeight: 'bold' }}>{user.name}</div>
-                                    <div style={{ fontSize: '12px', color: user.status === 'online' ? 'green' : 'gray' }}>
+                                    <div style={{ fontSize: '12px', color: user.status === 'ONLINE' ? 'green' : 'gray' }}>
                                         {user.status}
                                     </div>
                                 </div>

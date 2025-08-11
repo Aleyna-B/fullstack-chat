@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState,useEffect } from 'react';
 import axiosInstance from './config/axiosConfig';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,19 @@ export default function Login() {
     const [errorMessage, setErrorMessage] = useState('');
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        axiosInstance.interceptors.request.use(
+            (config) => {
+                const token = localStorage.getItem('jwtToken');
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
+    }, []);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -27,6 +40,9 @@ export default function Login() {
             if (response.status === 200 && response.data) {
                 console.log('login status:', response.status);
                 console.log('User logged in:', response.data);
+                
+                const token = response.data.token;
+                localStorage.setItem("jwtToken", token);
                 navigate('/chat/v1/chat');
             } else {
                 console.log("Either the response status or the response data is faulty");

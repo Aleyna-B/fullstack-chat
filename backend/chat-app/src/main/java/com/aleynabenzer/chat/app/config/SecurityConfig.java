@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,14 +30,29 @@ public class SecurityConfig {
 		this.userService = userService;
 	}
 	
+//	@Bean
+//	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+//		return http.csrf(AbstractHttpConfigurer::disable)
+//				.authorizeHttpRequests(r -> r.requestMatchers("/auth/**").permitAll()
+//			    .anyRequest().authenticated())
+//				.sessionManagement(m->m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//				.authenticationProvider(authenticationProvider()).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+//				.build();
+//	}
+	
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-		return http.csrf(AbstractHttpConfigurer::disable)
-				.authorizeHttpRequests(r -> r.requestMatchers("/auth/**").permitAll()
-			    .anyRequest().authenticated())
-				.sessionManagement(m->m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.authenticationProvider(authenticationProvider()).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-				.build();
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	    return http
+	        .csrf(AbstractHttpConfigurer::disable)
+	        .cors(Customizer.withDefaults()) // use CorsWebConfig
+	        .authorizeHttpRequests(r -> r
+	            .requestMatchers("/auth/**").permitAll()
+	            .anyRequest().authenticated()
+	        )
+	        .sessionManagement(m -> m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+	        .authenticationProvider(authenticationProvider())
+	        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+	        .build();
 	}
 
 	@Bean
