@@ -1,5 +1,6 @@
 package com.aleynabenzer.chat.app.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -16,6 +17,7 @@ import com.aleynabenzer.chat.app.dto.MessageNotifDto;
 import com.aleynabenzer.chat.app.model.MessageEntity;
 import com.aleynabenzer.chat.app.model.UserEntity;
 import com.aleynabenzer.chat.app.service.impl.MessageService;
+import com.aleynabenzer.chat.app.service.impl.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,10 +27,16 @@ public class MessageController {
 	private final SimpMessagingTemplate messagingTemplate;
     private final MessageService chatMessageService;
     private final ModelMapper modelMapper;
+    private final UserService userService;
 
     @MessageMapping("/chat")
-    public void processMessage(@Payload MessageEntity message,@AuthenticationPrincipal UserEntity loggedInUser) {
-        MessageEntity savedMsg = chatMessageService.addMessage(message,loggedInUser.getId());
+    public void processMessage(@Payload MessageEntity message,@AuthenticationPrincipal UserEntity loggedInUser,
+    		Principal principal) {
+    	System.out.println("WS message from user: " + principal.getName());
+        String email = principal.getName();
+        UserEntity sender = userService.getByEmail(email);
+        message.setSenderId(sender.getId());
+        MessageEntity savedMsg = chatMessageService.addMessage(message,sender.getId());
         
         messagingTemplate.convertAndSendToUser(
         		String.valueOf(message.getRecipientId()), "/queue/messages",

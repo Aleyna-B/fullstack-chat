@@ -9,6 +9,9 @@ export function connect() {
 
         stompClient = new Client({
             webSocketFactory: () => socket,
+            connectHeaders: {
+                Authorization: "Bearer " + localStorage.getItem("jwtToken")
+            },
             reconnectDelay: 5000,
             debug: (str) => console.log(str),
 
@@ -20,7 +23,7 @@ export function connect() {
                     console.log("Received:", JSON.parse(message.body));
                 });
 
-                resolve(); 
+                resolve();
             },
 
             onStompError: (frame) => {

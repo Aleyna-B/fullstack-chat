@@ -118,7 +118,7 @@ const Chat = () => {
         messageObj.payload = messageText;   //for rendering purposes
 
         const sendThis = {
-            recipientId: 2,
+            recipientId: activeConversationId, // Assuming activeConversationId is the ID of the recipient
             content: messageText,
             timestamp: new Date()
         };
@@ -138,26 +138,6 @@ const Chat = () => {
         }
     }
 
-    // useEffect(() => {       //possible real implementation of receiving messages from a server
-    //     const socket = new WebSocket('ws://localhost:8080/chat');
-
-    //     socket.onmessage = (event) => {
-    //         const data = JSON.parse(event.data);
-
-    //         const incomingMessage = {
-    //             payload: data.payload,
-    //             sentTime: data.timestamp,
-    //             sender: data.sender,
-    //             direction: "incoming",
-    //             position: "single",
-    //             type: data.type
-    //         };
-
-    //         setMessages(prevMessages => [...prevMessages, incomingMessage]);
-    //     };
-
-    //     return () => socket.close();
-    // }, []);
 
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -197,15 +177,34 @@ const Chat = () => {
         !conversations.some(conv => conv.id === contact.id)
     );
 
-    const [activeConversationId, setActiveConversationId] = useState(2); // Default to Jane's conversation ID
+    const [activeConversationId, setActiveConversationId] = useState();
     const activeConversation = conversations.find(conv => conv.id === activeConversationId);
 
+    function fetchChatMessages(recipientId) {
+        return axiosInstance.get(`/messages/${recipientId}`)
+            .then(response => {
+
+                return response.data.map(msg => ({
+                    id: msg.id,
+                    sender: msg.senderId,
+                    recipientId: msg.recipientId,
+                    payload : msg.content,
+                    sentTime: msg.timestamp,
+                    direction: msg.senderId === recipientId ? "incoming" : "outgoing",
+                    position: "single"
+                }));
+            })
+            .catch(error => {
+                console.error("Error fetching messages:", error);
+                return [];
+            });
+    }
+
     const [showNewChatModal, setShowNewChatModal] = useState(false);
-    function startNewChat(user) {
+    function startNewChat(user) {       //newchatmodelin map fonksiyonundaki user
         // Create new conversation object
         const newConversation = {
-            id: Date.now(), // Backend would return real conversation ID
-            partnerId: user.id,
+            id: user.id,
             name: user.name,
             active: true
         };
@@ -244,15 +243,6 @@ const Chat = () => {
         const userIds = selectedMassRecipients.map(u => u.id);
 
         console.log("Sending mass message:", messageText, "to:", userIds);
-
-        // Example: send over WebSocket
-        // socket.send(JSON.stringify({
-        //     type: "mass_message",
-        //     to: userIds,
-        //     message: trimmed
-        // }));
-
-        //make sure the message is saved in the database
     }
 
     function handleMassMessageCancel() {
@@ -298,8 +288,11 @@ const Chat = () => {
                                         ...c,
                                         active: c.id === conv.id
                                     })));
-                                    // Load messages for this conversation
-                                    setMessages([]); // Or load from storage/API
+
+                                    fetchChatMessages(conv.id)
+                                        .then(mappedMessages => {
+                                            setMessages(mappedMessages);
+                                        });
                                 }}
                             >
                                 <Avatar src="/imgs/profile.png" />

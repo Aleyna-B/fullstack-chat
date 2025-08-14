@@ -15,6 +15,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -47,31 +48,34 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	}
 
 	@Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new ChannelInterceptor() {
-            @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+	public void configureClientInboundChannel(ChannelRegistration registration) {
+	    registration.interceptors(new ChannelInterceptor() {
+	        @Override
+	        public Message<?> preSend(Message<?> message, MessageChannel channel) {
+	            StompHeaderAccessor accessor =
+	                    MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+	            if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+	                String authHeader = accessor.getFirstNativeHeader("Authorization");
 
-                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                        String jwt = authHeader.substring(7);
+	                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+	                    String jwt = authHeader.substring(7);
 
-                        Authentication authentication =
-                                jwtAuthFilter.getAuthenticationFromToken(jwt);
+	                    Authentication authentication = jwtAuthFilter.getAuthenticationFromToken(jwt);
 
-                        if (authentication != null) {
-                            accessor.setUser(authentication);
-                        }
-                    }
-                }
-                return message;
-            }
-        });
-    }
+	                    if (authentication != null) {
+	                       
+	                        accessor.setUser(authentication);
+
+	                        SecurityContextHolder.getContext().setAuthentication(authentication);
+	                    }
+	                }
+	            }
+	            return message;
+	        }
+	    });
+	}
+
 	@Override
 	public boolean configureMessageConverters(List<MessageConverter> messageConverters) {
 		DefaultContentTypeResolver resolver = new DefaultContentTypeResolver();
