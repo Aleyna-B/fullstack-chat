@@ -3,6 +3,7 @@ package com.aleynabenzer.chat.app.config;
 import java.io.IOException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,6 +32,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		this.jwtUtilsService = jwtUtilsService;
 		this.userService = userService;
 	}
+	
+	public Authentication getAuthenticationFromToken(String jwtToken) {
+        try {
+            String userEmail = jwtUtilsService.extractUsername(jwtToken);
+
+            if (userEmail != null) {
+                UserDetails userDetails = userService.loadUserByUsername(userEmail);
+
+                if (jwtUtilsService.isTokenValid(jwtToken, userDetails)) {
+                    return new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                }
+            }
+        } catch (ExpiredJwtException ex) {
+            logger.warn("Expired JWT: " + ex.getMessage());
+        } catch (Exception e) {
+            logger.error("Invalid JWT: " + e.getMessage());
+        }
+        return null;
+    }
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -72,6 +96,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		filterChain.doFilter(request, response);
 
 	}
-
-
 }

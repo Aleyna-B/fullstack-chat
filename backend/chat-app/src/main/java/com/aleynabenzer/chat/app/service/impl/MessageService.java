@@ -16,9 +16,9 @@ public class MessageService{
 	private final MessageRepository repository;
     private final ChatRoomService chatRoomService;
 
-    public MessageEntity addMessage(MessageEntity chatMessage) {
+    public MessageEntity addMessage(MessageEntity chatMessage,Integer loggedInUserId) {
         var chatId = chatRoomService
-                .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), true)
+                .getChatRoomId(loggedInUserId, chatMessage.getRecipientId(), true)
                 .orElseThrow(); // You can create your own dedicated exception
         chatMessage.setChatId(chatId);
         repository.save(chatMessage);

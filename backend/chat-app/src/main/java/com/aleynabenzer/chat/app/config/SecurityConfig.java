@@ -47,6 +47,7 @@ public class SecurityConfig {
 	        .cors(Customizer.withDefaults()) // use CorsWebConfig
 	        .authorizeHttpRequests(r -> r
 	            .requestMatchers("/auth/**").permitAll()
+	            .requestMatchers("/ws/**").permitAll()
 	            .anyRequest().authenticated()
 	        )
 	        .sessionManagement(m -> m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

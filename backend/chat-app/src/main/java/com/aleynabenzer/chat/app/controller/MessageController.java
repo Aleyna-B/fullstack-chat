@@ -7,12 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.aleynabenzer.chat.app.dto.MessageNotifDto;
 import com.aleynabenzer.chat.app.model.MessageEntity;
+import com.aleynabenzer.chat.app.model.UserEntity;
 import com.aleynabenzer.chat.app.service.impl.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,8 +27,8 @@ public class MessageController {
     private final ModelMapper modelMapper;
 
     @MessageMapping("/chat")
-    public void processMessage(@Payload MessageEntity message) {
-        MessageEntity savedMsg = chatMessageService.addMessage(message);
+    public void processMessage(@Payload MessageEntity message,@AuthenticationPrincipal UserEntity loggedInUser) {
+        MessageEntity savedMsg = chatMessageService.addMessage(message,loggedInUser.getId());
         
         messagingTemplate.convertAndSendToUser(
         		String.valueOf(message.getRecipientId()), "/queue/messages",
@@ -34,11 +36,11 @@ public class MessageController {
         );
     }
 
-    @GetMapping("/messages/{senderId}/{recipientId}") ///chat/v1/messages/{senderId}/{recipientId}
-    public ResponseEntity<List<MessageEntity>> findChatMessages(@PathVariable("senderId") Integer senderId,
-                                                 @PathVariable("recipientId") Integer recipientId) {
+    @GetMapping("/messages/{recipientId}") ///chat/v1/messages/{recipientId}
+    public ResponseEntity<List<MessageEntity>> findChatMessages(@AuthenticationPrincipal UserEntity loggedInUser,
+    									@PathVariable("recipientId") Integer recipientId) {
         return ResponseEntity
-                .ok(chatMessageService.findChatMessages(senderId, recipientId));
+                .ok(chatMessageService.findChatMessages(loggedInUser.getId(), recipientId));
     }
 
 }

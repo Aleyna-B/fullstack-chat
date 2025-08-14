@@ -14,18 +14,11 @@ import ImageModal from './modules/ImageModal';
 import NewChatModal from './modules/NewChatModal';
 import MassMessageModal from './modules/MassMessageReciepentsModal';
 import axiosInstance from './config/axiosConfig';
+import { connect, sendChatMessage } from './config/WebSocket';
 
 
 const Chat = () => {
-    const [messages, setMessages] = useState([
-        {
-            payload: "Hello \nHow are you?",
-            sentTime: "just now",
-            sender: "Jane",
-            direction: "incoming",
-            position: "single"
-        }
-    ]);
+    const [messages, setMessages] = useState([]);
 
     const messageObj = {
         //message: "", is an alias for model.payload, this is for backward compatibility. model.payload property has precedence over model.message.
@@ -34,7 +27,6 @@ const Chat = () => {
         direction: "outgoing",
         position: "single",
         payload: ""
-
     };
 
     const [showAttachModal, setShowAttachModal] = useState(false);
@@ -122,13 +114,28 @@ const Chat = () => {
         setShowAttachModal(false);
     }
 
-    function sendMessage(messageText) { //!handle empty messages later!
-        messageObj.payload = messageText;
-        console.log("Message sent: ", messageObj.payload);
-        console.log("Message sent time: ", messageObj.sentTime);
-        setMessages(prevMessages => [...prevMessages, messageObj]);
+    async function sendMessage(messageText) { //!handle empty messages later!
+        messageObj.payload = messageText;   //for rendering purposes
 
-        //then send the message to a server
+        const sendThis = {
+            recipientId: 2,
+            content: messageText,
+            timestamp: new Date()
+        };
+
+        try {
+            await connect(); // Wait until connected
+            console.log("Now safe to send messages");
+            console.log("Message sent: ", messageObj.payload);
+            console.log("Message sent to backend: ", sendThis);
+            console.log("Message sent time: ", messageObj.sentTime);
+            setMessages(prevMessages => [...prevMessages, messageObj]);
+
+            sendChatMessage(sendThis);
+        }
+        catch (error) {
+            console.error("Failed to connect:", error);
+        }
     }
 
     // useEffect(() => {       //possible real implementation of receiving messages from a server
@@ -213,22 +220,8 @@ const Chat = () => {
         // Clear messages for new chat
         setMessages([]);
         setShowNewChatModal(false);
-        // Send to backend to create conversation record
-        createConversationInDB(user.id);
 
         console.log("Started conversation with:", user.name);
-    }
-
-    async function createConversationInDB(partnerId) {
-        //     try {
-        //         await fetch('/api/conversations', {
-        //             method: 'POST',
-        //             headers: { 'Content-Type': 'application/json' },
-        //             body: JSON.stringify({ partnerId })
-        //         });
-        //     } catch (error) {
-        //         console.error('Failed to create conversation:', error);
-        //     }
     }
 
     const [showMassMessageModal, setShowMassMessageModal] = useState(false);
