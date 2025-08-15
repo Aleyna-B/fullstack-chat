@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import com.aleynabenzer.chat.app.dto.MassMessageDto;
 import com.aleynabenzer.chat.app.dto.MessageNotifDto;
 import com.aleynabenzer.chat.app.model.MessageEntity;
 import com.aleynabenzer.chat.app.model.UserEntity;
@@ -25,30 +26,39 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MessageController {
 	private final SimpMessagingTemplate messagingTemplate;
-    private final MessageService chatMessageService;
-    private final ModelMapper modelMapper;
-    private final UserService userService;
+	private final MessageService chatMessageService;
+	private final ModelMapper modelMapper;
+	private final UserService userService;
 
-    @MessageMapping("/chat")
-    public void processMessage(@Payload MessageEntity message,@AuthenticationPrincipal UserEntity loggedInUser,
-    		Principal principal) {
-    	System.out.println("WS message from user: " + principal.getName());
-        String email = principal.getName();
-        UserEntity sender = userService.getByEmail(email);
-        message.setSenderId(sender.getId());
-        MessageEntity savedMsg = chatMessageService.addMessage(message,sender.getId());
-        
-        messagingTemplate.convertAndSendToUser(
-        		String.valueOf(message.getRecipientId()), "/queue/messages",
-                modelMapper.map(savedMsg, MessageNotifDto.class)
-        );
-    }
+	@MessageMapping("/chat")
+	public void processMessage(@Payload MessageEntity message, Principal principal) {
+		String email = principal.getName();
+		UserEntity sender = userService.getByEmail(email);
+		message.setSenderId(sender.getId());
 
-    @GetMapping("/messages/{recipientId}") ///chat/v1/messages/{recipientId}
-    public ResponseEntity<List<MessageEntity>> findChatMessages(@AuthenticationPrincipal UserEntity loggedInUser,
-    									@PathVariable("recipientId") Integer recipientId) {
-        return ResponseEntity
-                .ok(chatMessageService.findChatMessages(loggedInUser.getId(), recipientId));
-    }
+		MessageEntity savedMsg = chatMessageService.addMessage(message, sender.getId());
+
+		messagingTemplate.convertAndSendToUser(String.valueOf(message.getRecipientId()), "/queue/messages",
+				modelMapper.map(savedMsg, MessageNotifDto.class));
+	}
+
+	@MessageMapping("/massChat")
+	public void massMessage(@Payload MassMessageDto message, @Payload List<Integer> recipientIds, Principal principal) {
+		String email = principal.getName();
+		UserEntity sender = userService.getByEmail(email);
+		message.setSenderId(sender.getId());
+
+		List<MessageEntity> savedMsgs = chatMessageService.sendMassMessage(recipientIds, message);
+
+		savedMsgs.forEach(
+				msg -> messagingTemplate.convertAndSendToUser(msg.getRecipientId().toString(), "/queue/messages",
+						modelMapper.map(msg, MessageNotifDto.class)));
+	}
+
+	@GetMapping("/messages/{recipientId}") /// chat/v1/messages/{recipientId}
+	public ResponseEntity<List<MessageEntity>> findChatMessages(@AuthenticationPrincipal UserEntity loggedInUser,
+			@PathVariable("recipientId") Integer recipientId) {
+		return ResponseEntity.ok(chatMessageService.findChatMessages(loggedInUser.getId(), recipientId));
+	}
 
 }
