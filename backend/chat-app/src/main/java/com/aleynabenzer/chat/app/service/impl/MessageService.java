@@ -3,7 +3,6 @@ package com.aleynabenzer.chat.app.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 public class MessageService{
 	private final MessageRepository messageRepository;
     private final ChatRoomService chatRoomService;
-    private final ModelMapper modelMapper;
 
     public MessageEntity addMessage(MessageEntity chatMessage,Integer loggedInUserId) {
         var chatId = chatRoomService
@@ -35,17 +33,19 @@ public class MessageService{
     }
     
     @Transactional
-    public List<MessageEntity> sendMassMessage(List<Integer> recipientIds,
-            MassMessageDto massMessage) {
+    public List<MessageEntity> sendMassMessage(MassMessageDto massMessage) {
 
         List<MessageEntity> messages = new ArrayList<>();
 
-        for (Integer recipientId : recipientIds) {
+        for (Integer recipientId : massMessage.getRecipientIds()) {
             MessageEntity newMessage = new MessageEntity();
-            modelMapper.map(massMessage, newMessage);
+            Integer senderId = massMessage.getSenderId();
+            newMessage.setContent(massMessage.getContent());
+            newMessage.setSenderId(senderId);
+            newMessage.setTimestamp(massMessage.getTimestamp());
             
             var chatId = chatRoomService
-                    .getChatRoomId(massMessage.getSenderId(), recipientId, true).orElseThrow();;
+                    .getChatRoomId(senderId, recipientId, true).orElseThrow();;
             newMessage.setChatId(chatId);
             newMessage.setRecipientId(recipientId);
             messages.add(newMessage);

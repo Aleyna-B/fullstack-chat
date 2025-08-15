@@ -43,16 +43,16 @@ public class MessageController {
 	}
 
 	@MessageMapping("/massChat")
-	public void massMessage(@Payload MassMessageDto message, @Payload List<Integer> recipientIds, Principal principal) {
+	public void massMessage(@Payload MassMessageDto message, Principal principal) {
 		String email = principal.getName();
 		UserEntity sender = userService.getByEmail(email);
 		message.setSenderId(sender.getId());
 
-		List<MessageEntity> savedMsgs = chatMessageService.sendMassMessage(recipientIds, message);
+		List<MessageEntity> savedMsgs = chatMessageService.sendMassMessage(message);
 
 		savedMsgs.forEach(
-				msg -> messagingTemplate.convertAndSendToUser(msg.getRecipientId().toString(), "/queue/messages",
-						modelMapper.map(msg, MessageNotifDto.class)));
+				msg -> messagingTemplate.convertAndSendToUser(msg.getRecipientId().toString(), 
+						"/queue/messages",modelMapper.map(msg, MessageNotifDto.class)));
 	}
 
 	@GetMapping("/messages/{recipientId}") /// chat/v1/messages/{recipientId}

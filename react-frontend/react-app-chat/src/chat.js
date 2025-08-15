@@ -14,7 +14,7 @@ import ImageModal from './modules/ImageModal';
 import NewChatModal from './modules/NewChatModal';
 import MassMessageModal from './modules/MassMessageReciepentsModal';
 import axiosInstance from './config/axiosConfig';
-import { connect, sendChatMessage } from './config/WebSocket';
+import { connect, sendChatMessage,sendMassChatMessage } from './config/WebSocket';
 
 
 const Chat = () => {
@@ -188,7 +188,7 @@ const Chat = () => {
                     id: msg.id,
                     sender: msg.senderId,
                     recipientId: msg.recipientId,
-                    payload : msg.content,
+                    payload: msg.content,
                     sentTime: msg.timestamp,
                     direction: msg.senderId === recipientId ? "incoming" : "outgoing",
                     position: "single"
@@ -235,13 +235,28 @@ const Chat = () => {
         setShowMassComposeModal(true);
     }
 
-    function sendMassMessage(messageText) {
-        messageObj.payload = messageText;
-        console.log("Mass message sent: ", messageObj.payload);
-        setMassMessages(prevMessages => [...prevMessages, messageObj]);
+    async function sendMassMessage(messageText) {
+        messageObj.payload = messageText;       //rendering
 
         const userIds = selectedMassRecipients.map(u => u.id);
+        const massMessage = {
+            recipientIds: userIds,          //burdan gönderilen attribute ismi ile backend objesindeki attribute ismi aynı olmalı
+            content: messageText,
+            timestamp: new Date()
+        };
 
+        try {
+            await connect(); // Wait until connected
+            console.log("Now safe to send messages");
+            console.log("Mass Message sent to backend: ", massMessage);
+            console.log("Mass Message sent time: ", messageObj.sentTime);
+            setMassMessages(prevMessages => [...prevMessages, messageObj]);
+
+            sendMassChatMessage(massMessage);
+        }
+        catch (error) {
+            console.error("Failed to connect:", error);
+        }
         console.log("Sending mass message:", messageText, "to:", userIds);
     }
 

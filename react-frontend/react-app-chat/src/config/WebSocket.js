@@ -52,3 +52,14 @@ export function sendChatMessage(msg) {
         console.error("STOMP client is not connected yet!");
     }
 }
+
+export function sendMassChatMessage(msg) {
+    if (stompClient && stompClient.connected) {
+        stompClient.publish({
+            destination: "/app/massChat",
+            body: JSON.stringify(msg)
+        });
+    } else {
+        console.error("STOMP client is not connected yet!");
+    }
+}
