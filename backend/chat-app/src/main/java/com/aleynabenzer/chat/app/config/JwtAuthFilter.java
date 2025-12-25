@@ -21,7 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class JwtAuthFilter extends OncePerRequestFilter {
+public class JwtAuthFilter extends OncePerRequestFilter {	//JWT ile ilgili doğrulamalar burada yapılır
 
 	private static final String AUTHORIZATION = "Authorization";
 	

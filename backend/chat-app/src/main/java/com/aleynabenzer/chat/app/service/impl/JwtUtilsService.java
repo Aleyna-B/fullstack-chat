@@ -18,7 +18,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
 @Service
-public class JwtUtilsService implements IJwtUtils {
+public class JwtUtilsService implements IJwtUtils {	//JWT üretiliyor
 	private final String SECRET_KEY_BASE = "LSDHW765706570968570865708965ddddddddRELNLFK4654654DSADSAD4454DSADSDQQ5454";
 	private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 saat
 
