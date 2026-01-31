@@ -1,5 +1,5 @@
 # This tells the runner which Docker image to start
-image: openjdk:17-slim
+image: eclipse-temurin:17-jdk-alpine
 
 # The 'stages' block defines the order of work
 stages:
