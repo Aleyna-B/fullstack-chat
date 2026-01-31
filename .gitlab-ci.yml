@@ -1,5 +1,5 @@
 # This tells the runner which Docker image to start
-image: openjdk:latest
+image: openjdk:17-slim
 
 # The 'stages' block defines the order of work
 stages:
