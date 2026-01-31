@@ -1,0 +1,13 @@
+# This tells the runner which Docker image to start
+image: openjdk:latest
+
+# The 'stages' block defines the order of work
+stages:
+  - test
+
+# This is our first job
+verify-java-job:
+  stage: test
+  script:
+    - java -version
+    - echo "Hello from gitlab-runner-one! The 'Kitchen' is open."
