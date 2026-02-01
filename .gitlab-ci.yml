@@ -19,7 +19,16 @@ stages:
   - build
   - test
 
+build-job:
+  stage: build
+  script:
+    - cd backend/chat-app          # Move into the project folder
+    - mvn clean compile            # The actual "Build" instruction
+  artifacts:
+    paths:
+      - backend/chat-app/target/   # Save the results for the next stage
+
 test-job:
   stage: test
   script:
-    - mvn test
+    - mvn -f backend/chat-app/pom.xml test    # will look for target/test-classes the previous stage created
